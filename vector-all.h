@@ -1,3 +1,5 @@
+
+
 #define COLOR
 #define N 3
 #define T float
@@ -19,6 +21,8 @@
 #define PASTER(X, Y) X ## Y
 #define CLASS_EVALUATOR(X, Y) PASTER(X, Y)
 #define CLASS_NAME CLASS_EVALUATOR(CLASS_BASE, N)
+
+#define UNPAREN(...) __VA_ARGS__
 
 #if 0
 #define MEMBERS1 DIM1
@@ -83,14 +87,6 @@
 #define CIN4 CIN3 >> v.DIM4
 #define CIN_EVALUATOR(X) PASTER(CIN, X)
 #define CIN CIN_EVALUATOR(N)
-#endif
-
-#define INIT1 DIM1(DIM1)
-#define INIT2 INIT1, DIM2(DIM2)
-#define INIT3 INIT2, DIM3(DIM3)
-#define INIT4 INIT3, DIM4(DIM4)
-#define INIT_EVALUATOR(X) PASTER(INIT, X)
-#define INIT INIT_EVALUATOR(N)
 
 #define CEXPAND1(PFX) PFX DIM1
 #define CEXPAND2(PFX) CEXPAND1(PFX), PFX DIM2
@@ -99,47 +95,56 @@
 #define CEXPAND_EVALUATOR(X) PASTER(CEXPAND, X)
 #define CEXPAND_DIMENSIONS(PFX) CEXPAND_EVALUATOR(N)(PFX)
 
-#define EXPAND1(PFX, IFX, SFX) PFX DIM1 SFX
-#define EXPAND2(PFX, IFX, SFX) EXPAND1(PFX, IFX, SFX) IFX PFX DIM2 SFX
-#define EXPAND3(PFX, IFX, SFX) EXPAND2(PFX, IFX, SFX) IFX PFX DIM3 SFX
-#define EXPAND4(PFX, IFX, SFX) EXPAND3(PFX, IFX, SFX) IFX PFX DIM4 SFX
-#define EXPAND_EVALUATOR(X) PASTER(EXPAND, X)
-#define EXPAND_DIMENSIONS(PFX, IFX, SFX) EXPAND_EVALUATOR(N)(PFX, IFX, SFX)
+#define INIT1 DIM1{DIM1}
+#define INIT2 INIT1, DIM2(DIM2)
+#define INIT3 INIT2, DIM3(DIM3)
+#define INIT4 INIT3, DIM4(DIM4)
+#define INIT_EVALUATOR(X) PASTER(INIT, X)
+#define INIT INIT_EVALUATOR(N)
 
-#define EXPAND2_1(PFX, IFX, SFX) PFX DIM1 IFX DIM1 SFX
-#define EXPAND2_2(PFX, IFX, SFX) EXPAND2_1(PFX, IFX, SFX) PFX DIM2 IFX DIM2 SFX
-#define EXPAND2_3(PFX, IFX, SFX) EXPAND2_2(PFX, IFX, SFX) PFX DIM3 IFX DIM3 SFX
-#define EXPAND2_4(PFX, IFX, SFX) EXPAND2_3(PFX, IFX, SFX) PFX DIM4 IFX DIM4 SFX
+#endif
+
+#define EXPAND1(PFX, SFX)                                         PFX DIM1 SFX
+#define EXPAND2(SEP, PFX, SFX) EXPAND1(PFX, SFX)      UNPAREN SEP PFX DIM2 SFX
+#define EXPAND3(SEP, PFX, SFX) EXPAND2(SEP, PFX, SFX) UNPAREN SEP PFX DIM3 SFX
+#define EXPAND4(SEP, PFX, SFX) EXPAND3(SEP, PFX, SFX) UNPAREN SEP PFX DIM4 SFX
+#define EXPAND_EVALUATOR(X) PASTER(EXPAND, X)
+#define EXPAND_DIMENSIONS(SEP, PFX, SFX) EXPAND_EVALUATOR(N)(SEP, PFX, SFX)
+
+#define EXPAND2_1(PFX, IFX, SFX)                                                PFX DIM1 IFX DIM1 SFX
+#define EXPAND2_2(SEP, PFX, IFX, SFX) EXPAND2_1(PFX, IFX, SFX)      UNPAREN SEP PFX DIM2 IFX DIM2 SFX
+#define EXPAND2_3(SEP, PFX, IFX, SFX) EXPAND2_2(SEP, PFX, IFX, SFX) UNPAREN SEP PFX DIM3 IFX DIM3 SFX
+#define EXPAND2_4(SEP, PFX, IFX, SFX) EXPAND2_3(SEP, PFX, IFX, SFX) UNPAREN SEP PFX DIM4 IFX DIM4 SFX
 #define EXPAND2_EVALUATOR(X) PASTER(EXPAND2_, X)
-#define EXPAND2_DIMENSIONS(PFX, IFX, SFX) EXPAND2_EVALUATOR(N)(PFX, IFX, SFX)
+#define EXPAND2_DIMENSIONS(SEP, PFX, IFX, SFX) EXPAND2_EVALUATOR(N)(SEP, PFX, IFX, SFX)
 
 class CLASS_NAME {
 public:
-    T CEXPAND_DIMENSIONS();
+    T EXPAND_DIMENSIONS((,),,);
 
     CLASS_NAME() {}
-    CLASS_NAME(CEXPAND_DIMENSIONS(T)): INIT {}
+    CLASS_NAME(EXPAND_DIMENSIONS((,), T,)): EXPAND2_DIMENSIONS((,),,{,}) {}
 
     CLASS_NAME &operator+() {
         return *this;
     }
     CLASS_NAME operator-() {
-        return CLASS_NAME(CEXPAND_DIMENSIONS(-));
+        return CLASS_NAME(EXPAND_DIMENSIONS((,), -,));
     }
     CLASS_NAME &operator+=(const CLASS_NAME &v) {
-        EXPAND2_DIMENSIONS(, += v., ;)
+        EXPAND2_DIMENSIONS((),, += v., ;)
         return *this;
     }
     CLASS_NAME &operator-=(const CLASS_NAME &v) {
-        EXPAND2_DIMENSIONS(, -= v., ;)
+        EXPAND2_DIMENSIONS((),, -= v., ;)
         return *this;
     }
     CLASS_NAME &operator*=(const T c) {
-        EXPAND_DIMENSIONS(,,*= c;)
+        EXPAND_DIMENSIONS((),,*= c;)
         return *this;
     }
     CLASS_NAME &operator/=(const T c) {
-        EXPAND_DIMENSIONS(,,/= c;)
+        EXPAND_DIMENSIONS((),,/= c;)
         return *this;
     }
     CLASS_NAME operator+(const CLASS_NAME &v) {
@@ -163,11 +168,11 @@ public:
 };
 
 inline std::ostream &operator<<(std::ostream &s, const CLASS_NAME &v) {
-    s EXPAND_DIMENSIONS(<< v., << " ",);
+    s EXPAND_DIMENSIONS((<< " "), << v.,);
     return s;
 }
 
 inline std::istream &operator>>(std::istream &s, CLASS_NAME &v) {
-    s EXPAND_DIMENSIONS(>> v., ,);
+    s EXPAND_DIMENSIONS((), >> v.,);
     return s;
 }
