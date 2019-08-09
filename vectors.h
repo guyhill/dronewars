@@ -1,3 +1,6 @@
+#ifndef VECTORS_H
+#define VECTORS_H
+
 #define T int
 #define PREFIX I
 #undef COLOR
@@ -31,3 +34,5 @@
 #undef PREFIX
 #undef N
 #undef COLOR
+
+#endif
